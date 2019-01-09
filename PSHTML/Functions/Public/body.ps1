@@ -61,7 +61,7 @@ Function Body {
         [Hashtable]$Attributes
     )
     Process {
-        $tagname = "Body"
+        $tagname = "body"
 
         Set-htmltag -TagName $tagName -Parameters $PSBoundParameters -TagType NonVoid
     }
