@@ -72,7 +72,7 @@ Function Set-HtmlTag {
         foreach ($key in $Attributes.Keys) {
             if($key -notin $AttributesToSkip){
 
-                $attr += '{0}="{1}" ' -f $key, $Attributes[$key]
+                $attr += ' {0}="{1}"' -f $key, $Attributes[$key]
             }else{
                 $KeysToPostProcess += $Key 
             }
@@ -100,17 +100,17 @@ Function Set-HtmlTag {
                             write-verbose "[Set-HTMLTAG] attribute $($entry) is a reserved value, and should not be passed in the Attributes HashTable"
                             continue
                         }
-                        $attr += '{0}="{1}" ' -f $entry, $Parameters['Attributes'].$entry
+                        $attr += ' {0}="{1}"' -f $entry, $Parameters['Attributes'].$entry
                     }
 
                     continue
                 }
                 'httpequiv' {
-                    $attr += 'http-equiv="{0}" ' -f $Parameters[$PostKey]
+                    $attr += ' http-equiv="{0}"' -f $Parameters[$PostKey]
                     continue
                 }
                 'content_tag' {
-                    $attr += 'content="{0}" ' -f $Parameters[$PostKey]
+                    $attr += ' content="{0}"' -f $Parameters[$PostKey]
                     continue
                 }
                 default { 
@@ -137,13 +137,13 @@ Function Set-HtmlTag {
         }else{
             $ClosingFirstTag = "/>"
         }
-        
+    
         
         if($attr){
 
-            $TagAttributes = ' {0} {1} ' -f  $attr,$ClosingFirstTag
+            $TagAttributes = '{0}{1}' -f  $attr,$ClosingFirstTag
         }else{
-            $TagAttributes = ' {0}' -f  $ClosingFirstTag
+            $TagAttributes = '{0}' -f  $ClosingFirstTag
         }
 
         #Fix to avoid a additional space before the content
@@ -154,7 +154,10 @@ Function Set-HtmlTag {
             $TagContent = -join $outcontent 
         }
 
-        $Data = $TagBegin + $TagAttributes + $TagContent + $TagEnd
+        $Data = 
+"$TagBegin$TagAttributes
+    $TagContent
+$TagEnd";
 
 
         return $Data
