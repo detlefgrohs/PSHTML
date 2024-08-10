@@ -63,8 +63,6 @@ Function Body {
     Process {
         $tagname = "body"
 
-        Set-htmltag -TagName $tagName -Parameters $PSBoundParameters -TagType NonVoid
+        Set-htmltag -TagName $tagName -Parameters $PSBoundParameters -TagType NonVoid -StartTagLineBreak 'BeforeAndAfter' -EndTagLineBreak 'BeforeAndAfter'
     }
-
-
 }

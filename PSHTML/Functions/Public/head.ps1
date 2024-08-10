@@ -67,7 +67,7 @@ Function head {
 
     Process {
         $tagname = "head"
-        Set-HtmlTag -TagName $tagname -Parameters $PSBoundParameters -TagType nonVoid
+        Set-HtmlTag -TagName $tagname -Parameters $PSBoundParameters -TagType nonVoid -StartTagLineBreak 'BeforeAndAfter' -EndTagLineBreak 'BeforeAndAfter'
     }
 
 }

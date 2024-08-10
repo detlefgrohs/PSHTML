@@ -67,6 +67,6 @@ Function html {
 
     Process {
         $tagname = "html"
-        Set-HtmlTag -TagName $tagname -Parameters $PSBoundParameters -TagType nonVoid
+        Set-HtmlTag -TagName $tagname -Parameters $PSBoundParameters -TagType nonVoid -EndTagLineBreak 'Before'
     }
 }

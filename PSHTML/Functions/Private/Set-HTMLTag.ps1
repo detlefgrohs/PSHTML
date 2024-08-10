@@ -33,7 +33,15 @@ Function Set-HtmlTag {
         $TagType,
 
         [Parameter(Mandatory=$False)]
-        $Content
+        $Content,
+
+        [Parameter(Mandatory=$false)]
+        [ValidateSet('None', 'Before', 'After', 'BeforeAndAfter')]
+        $StartTagLineBreak = 'None',
+
+        [Parameter(Mandatory=$false)]
+        [ValidateSet('None', 'Before', 'After', 'BeforeAndAfter')]
+        $EndTagLineBreak = 'None'
     )
 
     Begin {
@@ -55,7 +63,7 @@ Function Set-HtmlTag {
                 write-verbose "[GetCustomParameters] No custom parameters passed."
             }
             Return $cleanedHash
-    }
+        }
         $CommonParameters = [System.Management.Automation.PSCmdlet]::CommonParameters + [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
     }
     Process {
@@ -64,24 +72,21 @@ Function Set-HtmlTag {
 
         $AttributesToSkip = "Content","Attributes","httpequiv","content_tag"
 
-
         $Attributes = GetCustomParameters -parameters $Parameters
-
 
         $KeysToPostProcess = @()
         foreach ($key in $Attributes.Keys) {
             if($key -notin $AttributesToSkip){
-
-                $attr += ' {0}="{1}"' -f $key, $Attributes[$key]
+                # adding this code to prevent the output of an empty attribute ie class=""
+                if ([System.String]::IsNullOrEmpty($Attributes[$key]) -ne $true) {
+                    $attr += ' {0}="{1}"' -f ($key).ToLower(), ([string]$Attributes[$key]).Trim()  # Added trim to get rid of leading and trailing spaces in attribute...
+                }
             }else{
                 $KeysToPostProcess += $Key 
             }
         }
 
-        
-
         foreach($PostKey in $KeysToPostProcess){
-
             switch ($PostKey) {
                 'Content' { 
                     if ($Parameters[$($PostKey)] -is [System.Management.Automation.ScriptBlock]) {
@@ -100,7 +105,7 @@ Function Set-HtmlTag {
                             write-verbose "[Set-HTMLTAG] attribute $($entry) is a reserved value, and should not be passed in the Attributes HashTable"
                             continue
                         }
-                        $attr += ' {0}="{1}"' -f $entry, $Parameters['Attributes'].$entry
+                        $attr += ' {0}="{1}"' -f ($entry).ToLower(), $Parameters['Attributes'].$entry
                     }
 
                     continue
@@ -147,18 +152,42 @@ Function Set-HtmlTag {
         }
 
         #Fix to avoid a additional space before the content
-        $TagAttributes = $TagAttributes.TrimEnd(" ")
+        # Is this necessary anymore DG 20190109?
+        #$TagAttributes = $TagAttributes.TrimEnd(" ")
     
         if($outcontent){
 
             $TagContent = -join $outcontent 
         }
 
-        $Data = 
-"$TagBegin$TagAttributes
-    $TagContent
-$TagEnd";
+        $LineBreak = "
+";
+        function StartsWithCRLF {
+            param($value)
 
+            if ($value.Length -gt 0) {
+                if (($value.Substring[0] -eq '`r' ) -or ($value.Substring[0] -eq '`n')) {
+                    return $true;
+                    Write-Host "StartsWithCRLF"
+                }
+            }
+            return $false;
+        }
+
+
+        $Data = "";
+        if (($StartTagLineBreak -eq 'Before') -or ($StartTagLineBreak -eq 'BeforeAndAfter')) { $Data += $LineBreak }
+        $Data += $TagBegin
+        $Data += $TagAttributes
+        if (($StartTagLineBreak -eq 'After') -or ($StartTagLineBreak -eq 'BeforeAndAfter')) { 
+            if ((StartsWithCRLF $TagContent) -eq $false) {
+                $Data += $LineBreak 
+            }
+        }
+        $Data += $TagContent
+        if (($EndTagLineBreak -eq 'Before') -or ($EndTagLineBreak -eq 'BeforeAndAfter')) { $Data += $LineBreak }
+        $Data += $TagEnd
+        if (($EndTagLineBreak -eq 'After') -or ($EndTagLineBreak -eq 'BeforeAndAfter')) { $Data += $LineBreak }
 
         return $Data
 
